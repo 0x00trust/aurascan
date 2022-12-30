@@ -12,8 +12,13 @@ import { WalletService } from 'src/app/core/services/wallet.service';
 import { getKeplr } from 'src/app/core/utils/keplr';
 import { getSigner } from 'src/app/core/utils/signing/signer';
 const amino = require('@cosmjs/amino');
-import {DirectSecp256k1HdWallet} from '@cosmjs/proto-signing';
+import {AccountData, DirectSecp256k1HdWallet} from '@cosmjs/proto-signing';
 import { GasPrice } from '@cosmjs/stargate';
+import { Keplr } from '@keplr-wallet/types';
+import {makeSignDoc, StdSignDoc, StdSignature} from '@cosmjs/amino';
+import { serializeSignDoc } from '@cosmjs/amino';
+import { sha256 } from '@cosmjs/crypto';
+import { SigningCosmosClient, Secp256k1HdWallet } from '@cosmjs/launchpad';
 
 @Component({
   selector: 'app-token-soulbound-detail-popup',
@@ -26,7 +31,6 @@ export class TokenSoulboundDetailPopupComponent implements OnInit {
   defaultImgToken = this.image_s3 + 'images/aura__ntf-default-img.png';
   network = this.environmentService.configValue.chain_info;
   currentAddress = '';
-
   constructor(
     @Inject(MAT_DIALOG_DATA) public soulboundDetail: any,
     public dialogRef: MatDialogRef<TokenSoulboundDetailPopupComponent>,
@@ -35,7 +39,8 @@ export class TokenSoulboundDetailPopupComponent implements OnInit {
     private walletService: WalletService,
     private toastr: NgxToastrService,
     public translate: TranslateService,
-  ) {}
+  ) {
+  }
 
   ngOnInit(): void {}
 
@@ -45,6 +50,30 @@ export class TokenSoulboundDetailPopupComponent implements OnInit {
 
   closeDialog() {
     this.dialogRef.close('canceled');
+  }
+
+  async getKeplr(): Promise<Keplr | undefined> {
+    if (window.keplr) {
+        return window.keplr;
+    }
+    
+    if (document.readyState === "complete") {
+        return window.keplr;
+    }
+    
+    return new Promise((resolve) => {
+        const documentStateChange = (event: Event) => {
+            if (
+                event.target &&
+                (event.target as Document).readyState === "complete"
+            ) {
+                resolve(window.keplr);
+                document.removeEventListener("readystatechange", documentStateChange);
+            }
+        };
+        
+        document.addEventListener("readystatechange", documentStateChange);
+    });
   }
 
   async equipSB() {
@@ -86,7 +115,10 @@ export class TokenSoulboundDetailPopupComponent implements OnInit {
       //   msgExecute,
       // );
 
-      await this.verifySignature()
+      // Contract to test [aura1zp24522ecc3dhux08m8r3p7629c5madew5chmvj6vecxfgv89flse6a2he]
+      await this.take('aura1zp24522ecc3dhux08m8r3p7629c5madew5chmvj6vecxfgv89flse6a2he', 
+      'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
+      'https://ipfs.io/ipfs/QmYGgEFqTRkWvNZ6u7gfk9HDdh55bQAbYVyc16TF1zX658/691');
 
       // const signer = getSigner(ESigningType.Keplr, this.walletService.chainInfo.chainId)
       //   .then((signer) => {
@@ -138,135 +170,49 @@ export class TokenSoulboundDetailPopupComponent implements OnInit {
     // });
   }
 
-  async verifySignature(){
-    const mnemonic = 'grief assault labor select faint leader impulse broken help garlic carry practice cricket cannon draw resist clump jar debris sentence notice poem drip benefit';
+  async take(contract, deployAddress: string, uri) {
     
+    // gas price
+    const gasPrice = GasPrice.fromString(`0.025utaura`);
+    const keplr =  await this.getKeplr();;
 
-    const deployerWallet: any = await DirectSecp256k1HdWallet.fromMnemonic(
-      this.auraTestnet.mnemonic,
-      {
-          prefix: this.auraTestnet.prefix
-      }
-  );
-
-  const testerWallet: any = await DirectSecp256k1HdWallet.fromMnemonic(
-    this.auraTestnet.tester_mnemonic,
-      {
-          prefix: this.auraTestnet.prefix
-      }
-  );
-  
-  const _uri = 'https://nft-ipfs-indexer.s3.ap-southeast-1.amazonaws.com/bafkreignkbivm4jeuaost7a4avdodiuzu7f2skpherns5xvgguget3ngci';
-
-   // create message to sign
-   const messageToSign = this.createMessageToSignv2(this.auraTestnet.chainId, deployerWallet.address, testerWallet.address, _uri);
-   console.log("messageToSign: ", messageToSign);
-
-   // sign message
-   const permitSignature = await this.getPermitSignatureAmino(messageToSign, this.auraTestnet.mnemonic);
-   console.log("permitSignature: ", permitSignature);
-
-    // get tester account
-    const testerAccount = (await testerWallet.getAccounts())[0];
-
-    const memo = "take nft";
-    // define the take message using the address of deployer, uri of the nft and permitSignature
-    const ExecuteTakeMsg = {
-        "take": {
-            "from": 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
-            "uri": _uri,
-            "signature": permitSignature,
-        }
-    }
-
-    console.log("ExecuteTakeMsg: ", ExecuteTakeMsg);
-
-     // gas price
-    const gasPrice = GasPrice.fromString(`0.025${this.auraTestnet.denom}`);
+    const offlineSigner = keplr.getOfflineSignerOnlyAmino(this.network.chainId);
 
     // connect tester wallet to chain
-    const testerClient = await SigningCosmWasmClient.connectWithSigner(this.auraTestnet.rpcEndpoint, testerWallet, { gasPrice });
-    console.log("testerClient");
-    console.log(testerClient);
-    console.log('testerAccount.address:' + testerAccount.address)
+    const testerClient = await SigningCosmWasmClient.connectWithSigner(this.network.rpc, offlineSigner, { gasPrice });
+
+    // sign message
+    const receiverAddress = (await offlineSigner.getAccounts())[0].address;
+    try{
+      /**
+       * @todo call api to fill pub_key & signature
+       */
+      const permitSignature=  {
+        hrp: 'aura',
+        pub_key: 'A9EkWupSnnFmIIEWG7WtMc0Af/9oEuEeSRTKF/bJrCfh',
+        signature: 'vUMf6gv7yGDtg91NYhBfAic5I0/uCvKpc6LLJliIlq8MAr6O+0R/bTl2upG8t8uittMBolJdKfX6CMWeUrDrIg=='
+      }
+      const memo = "";
+
+      
+      // define the take message using the address of deployer, uri of the nft and permitSignature
+      const ExecuteTakeMsg = {
+          take: {
+              from: deployAddress,
+              uri,
+              signature: permitSignature,
+          }
+      }
+
+      console.log("ExecuteTakeMsg: ", ExecuteTakeMsg);
 
     // take a NFT
-   try{
-    const takeResponse = await testerClient.execute(testerAccount.address, 
-      'aura1x0a84jpqxkhfgvn8kxj4krtxrvdl23jnddante4xe848tqzhfu3sussem7', 
-      ExecuteTakeMsg, 'auto',  memo);
-
-    console.log(takeResponse);
-   }catch(err){
-    console.log(err);
-   }
-  }
-
-  createMessageToSignv2(chainID, active, passive, uri) {
-    const AGREEMENT = 'Agreement(address active,address passive,string tokenURI)';
-
-    // create message to sign based on concating AGREEMENT, signer, receiver, and uri
-    const message = AGREEMENT + active + passive + uri;
-
-    const mess = {
-        type: "sign/MsgSignData",
-        value: {
-            signer: String(passive),
-            data: String(message)
-        }
-    };
-
-    const fee = {
-        gas: "0",
-        amount: []
-    };
-
-    const messageToSign = amino.makeSignDoc(mess, fee, String(chainID), "", 0, 0);
-    // console.log("amino.serializeSignDoc(messageToSign): ", toUtf8(amino.sortedJsonStringify(messageToSign)));
-
-    return messageToSign;
-}
-
-  async getPermitSignatureAmino(messageToSign, mnemonic) {
-    const signerWallet = await amino.Secp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        {
-            prefix: this.auraTestnet.prefix
-        }
-    );
-
-    // const adminAccount = deployerWallet.getAccounts()[0];
-      const signerAccount = (await signerWallet.getAccounts())[0];
-
-      console.log('signerAccount.address: '+ signerAccount.address);
-      
-    // sign message
-    const signedDoc = await signerWallet.signAmino(signerAccount.address, messageToSign);
-    console.log("signedDoc: ", signedDoc);
-
-    const decodedSignature = amino.decodeSignature(signedDoc.signature);
-    console.log(decodedSignature);
-
-    // pubkey must be compressed in base64
-    let permitSignature = {
-        "hrp": "aura",
-        "pub_key": Buffer.from(signerAccount.pubkey).toString('base64'),
-        "signature": signedDoc.signature.signature,
+      const takeResponse = await testerClient.execute(receiverAddress, contract, ExecuteTakeMsg, "auto", memo);
+      console.log(takeResponse);
+    }catch(err){
+      console.log(err);
     }
-
-    return permitSignature;
-  } 
-
-  auraTestnet = {
-    rpcEndpoint: 'https://rpc.dev.aura.network',
-    prefix: 'aura',
-    denom: 'utaura',
-    chainId: 'aura-testnet-2',
-    broadcastTimeoutMs: 5000,
-    broadcastPollIntervalMs: 1000,
-    mnemonic: 'grief assault labor select faint leader impulse broken help garlic carry practice cricket cannon draw resist clump jar debris sentence notice poem drip benefit',
-    tester_mnemonic: 'forward picnic antenna marble various tilt problem foil arrow animal oil salon catch artist tube dry noise door cliff grain fox left loan reopen'
-  };
+  }
 
   execute(data) {
     let msgError = MESSAGES_CODE_CONTRACT[5].Message;

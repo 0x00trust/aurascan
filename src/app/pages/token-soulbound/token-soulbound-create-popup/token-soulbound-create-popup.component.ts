@@ -7,8 +7,17 @@ import { NgxToastrService } from 'src/app/core/services/ngx-toastr.service';
 import { SoulboundService } from 'src/app/core/services/soulbound.service';
 import { WalletService } from 'src/app/core/services/wallet.service';
 import { getKeplr } from 'src/app/core/utils/keplr';
-import { serializeSignDoc } from '@cosmjs/amino';
+import { serializeSignDoc, OfflineAminoSigner } from '@cosmjs/amino';
+import { sha256 } from '@cosmjs/crypto';
+import { Secp256k1HdWallet, StdSignDoc} from '@cosmjs/amino';
+import { CosmosClient, SigningCosmosClient } from '@cosmjs/launchpad';
+import { CosmWasmClient, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { GasPrice, SigningStargateClient } from '@cosmjs/stargate';
+import { th } from 'date-fns/locale';
+import { EncodeObject } from '@cosmjs/proto-signing';
+import { CosmJSOfflineSigner } from '@coin98-com/connect-sdk/dist/client/cosmos';
 const amino = require('@cosmjs/amino');
+import {sortedJsonStringify} from '@cosmjs/amino/build/signdoc';
 
 @Component({
   selector: 'app-token-soulbound-create-popup',
@@ -49,70 +58,54 @@ export class TokenSoulboundCreatePopupComponent implements OnInit {
     const { soulboundTokenURI, receiverAddress } = this.createSBTokenForm.value;
 
     const keplr = await getKeplr();
-    // const AGREEMENT = 'Agreement(address active,address passive,string tokenURI)';
-    // let data = AGREEMENT + receiverAddress + minter + soulboundTokenURI;
+    const agreement = `Agreement(string chain_id,address active,address passive,string tokenURI)`;
+    const data = agreement + this.network.chainId + receiverAddress + minter + soulboundTokenURI;
+    const keplrAccounts = await keplr.getOfflineSigner(this.network.chainId).getAccounts();
 
-    let data = this.createMessageToSign(this.network.chainId, receiverAddress, minter, soulboundTokenURI);
+    const keplrSign =  await keplr.signArbitrary(
+      this.network.chainId,
+      keplrAccounts[0].address,
+      data);
+    console.log(keplrSign);
 
-    let dataJson = {
-      account_number: '0',
-      chain_id: 'aura-testnet-2',
-      fee: {
-        amount: [],
-        gas: '0',
-      },
-      memo: '',
-      msgs: {
-        type: 'sign/MsgSignData',
-        value: {
-          data: 'Agreement(address active,address passive,string tokenURI)aura1fqj2redmssckrdeekhkcvd2kzp9f4nks4fctrtaura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0nhttps://ipfs.io/ipfs/Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu',
-          signer: 'aura1uh24g2lc8hvvkaaf7awz25lrh5fptthu2dhq0n',
-        },
-      },
-      sequence: '0',
-    };
 
-    // let dataKeplr = await keplr.signAmino(this.network.chainId, minter, dataJson);
-    // console.log(dataKeplr);
-
-    console.log(JSON.stringify(data));
-
-    // let dataTest = serializeSignDoc(data);
-    // let dataKeplr = await keplr.signArbitrary(this.network.chainId, minter, JSON.stringify(dataJson));
-    const message = "Create NFT token";
-    let dataKeplr = await keplr.signArbitrary(this.network.chainId, minter, message);
     const payload = {
-      signature: dataKeplr.signature,
-      msg: message,
-      pubKey: dataKeplr.pub_key.value,
+      signature: keplrSign.signature,
+      msg: data,
+      pubKey: keplrSign.pub_key,
       contract_address: this.data.contractAddress,
       receiver_address: receiverAddress,
       token_uri: soulboundTokenURI,
     };
-
-    this.dialogRef.close();
-    this.executeCreate(payload);
+    console.log(payload);
+    // this.dialogRef.close();
+    // this.executeCreate(payload);
   }
 
   createMessageToSign(chainID, active, passive, uri) {
     const AGREEMENT = 'Agreement(address active,address passive,string tokenURI)';
 
     // create message to sign based on concating AGREEMENT, signer, receiver, and uri
-    const message = {
-      type: 'sign/MsgSignData',
-      value: {
-        signer: passive,
-        data: AGREEMENT + active + passive + uri,
+    const message = AGREEMENT + active + passive + uri;
+
+    const msgTest: any = {
+      chain_id: chainID,
+      account_number: '0',
+      sequence: '0',
+      fee: { gas: '0', amount: [] },
+      msgs: {
+        type: 'sign/MsgSignData',
+        value: {
+          signer: passive,
+          data: message
+        }
       },
+      memo: ''
     };
-
-    const fee = {
-      gas: '0',
-      amount: [],
-    };
-
-    return amino.makeSignDoc(message, fee, chainID, '', 0, 0);
+    return msgTest;
   }
+
+  
 
   checkFormValid(): boolean {
     return true;
