@@ -136,7 +136,7 @@ export class MaterialModule {}
       color: 'blue',
     }),
     HttpClientModule,
-    BrowserModule,
+    BrowserModule.withServerTransition({ appId: 'serverApp' }),
     AppRoutingModule,
     LayoutsModule,
     BrowserAnimationsModule,
