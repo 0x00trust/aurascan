@@ -36,6 +36,7 @@
         "@cosmjs/stargate": "^0.28.13",
         "@google/model-viewer": "^1.12.0",
         "@ng-bootstrap/ng-bootstrap": "^10.0.0",
+        "@nguniversal/builders": "^15.1.0",
         "@nguniversal/express-engine": "^15.1.0-rc.0",
         "@nguniversal/module-map-ngfactory-loader": "^8.2.6",
         "@ngx-translate/core": "^13.0.0",
