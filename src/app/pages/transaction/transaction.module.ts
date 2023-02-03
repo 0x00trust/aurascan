@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgxMaskModule } from 'ngx-mask';
-import { MaterialModule } from '../../../app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from '../../../app/core/pipes/common-pipe.module';
 import { MappingErrorService } from '../../../app/core/services/mapping-error.service';
 import { TransactionService } from '../../../app/core/services/transaction.service';

@@ -5,7 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
-import { MaterialModule } from 'src/app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from 'src/app/core/pipes/common-pipe.module';
 import { SoulboundService } from 'src/app/core/services/soulbound.service';
 import { AudioPlayerModule } from 'src/app/shared/components/audio-player/audio-player.module';

@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NgxMaskModule } from 'ngx-mask';
 import { SimplebarAngularModule } from 'simplebar-angular';
 import { LoadingImageModule } from 'src/app/shared/components/loading-image/loading-image.module';
-import { MaterialModule } from '../../../app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from '../../../app/core/pipes/common-pipe.module';
 import { AccountService } from '../../../app/core/services/account.service';
 import { BlockService } from '../../../app/core/services/block.service';

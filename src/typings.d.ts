@@ -10,6 +10,8 @@ declare global {
   interface Window extends KeplrWindow {
     coin98: {
       keplr: Keplr;
-    };
+    }
+    keplr: any,
+    removeAllListeners: any,
   }
 }

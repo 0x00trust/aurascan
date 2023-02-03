@@ -5,7 +5,7 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgxMaskModule } from 'ngx-mask';
 import { PaginatorModule } from 'src/app/shared/components/paginator/paginator.module';
-import { MaterialModule } from '../../../app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from '../../../app/core/pipes/common-pipe.module';
 import { BlockService } from '../../../app/core/services/block.service';
 import { SharedModule } from '../../../app/shared/shared.module';

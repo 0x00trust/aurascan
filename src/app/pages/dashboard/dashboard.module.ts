@@ -8,7 +8,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { MaskPipe, NgxMaskModule } from 'ngx-mask';
 import { CarouselModule } from 'ngx-owl-carousel-o';
 import { SimplebarAngularModule } from 'simplebar-angular';
-import { MaterialModule } from 'src/app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from 'src/app/core/pipes/common-pipe.module';
 import { BlockService } from 'src/app/core/services/block.service';
 import { ProposalService } from 'src/app/core/services/proposal.service';

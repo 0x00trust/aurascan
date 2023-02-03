@@ -7,7 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ClickOutsideModule } from 'ng-click-outside';
 import { DateFnsModule } from 'ngx-date-fns';
 import { NgxMaskModule } from 'ngx-mask';
-import { MaterialModule } from 'src/app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { CommonPipeModule } from 'src/app/core/pipes/common-pipe.module';
 import { ContractTableModule } from 'src/app/shared/components/contract-table/contract-table.module';
 import { DropdownModule } from 'src/app/shared/components/dropdown/dropdown.module';

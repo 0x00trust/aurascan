@@ -1,6 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import '@google/model-viewer';
-
+import * as modelView from '@google/model-viewer';
 @Component({
   selector: 'app-model-view',
   templateUrl: './model-view.component.html',

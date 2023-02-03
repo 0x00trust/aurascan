@@ -8,7 +8,6 @@ import { NgxMaskModule } from 'ngx-mask';
 import { SimplebarAngularModule } from 'simplebar-angular';
 import { NftCardModule } from 'src/app/shared/components/cards/nft-card/nft-card.module';
 import { CustomVideoPlayerModule } from 'src/app/shared/components/custom-video-player/custom-video-player.module';
-import { MaterialModule } from '../../../app.module';
 import { CommonPipeModule } from '../../../core/pipes/common-pipe.module';
 import { AccountService } from '../../../core/services/account.service';
 import { TransactionService } from '../../../core/services/transaction.service';
@@ -23,6 +22,7 @@ import { NftListComponent } from './nft-list/nft-list.component';
 import { TokenTableComponent } from './token-table/token-table.component';
 import { SoulboundTokenComponent } from './soulbound-token/soulbound-token.component';
 import { SoulboundFeatureTokensModule } from 'src/app/shared/components/soulbound-feature-tokens/soulbound-feature-tokens.module';
+import { MaterialModule } from 'src/app/material.module';
 
 @NgModule({
   declarations: [AccountDetailComponent, TokenTableComponent, NftListComponent, SoulboundTokenComponent],

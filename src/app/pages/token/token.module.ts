@@ -12,7 +12,7 @@ import { NftCardModule } from 'src/app/shared/components/cards/nft-card/nft-card
 import { ContractPopoverModule } from 'src/app/shared/components/contract-popover/contract-popover.module';
 import { CustomVideoPlayerModule } from 'src/app/shared/components/custom-video-player/custom-video-player.module';
 import { ModelViewModule } from 'src/app/shared/components/model-view/model-view.module';
-import { MaterialModule } from '../../../app/app.module';
+import { MaterialModule } from 'src/app/material.module';
 import { PaginatorModule } from '../../../app/shared/components/paginator/paginator.module';
 import { TableNoDataModule } from '../../../app/shared/components/table-no-data/table-no-data.module';
 import { SharedModule } from '../../../app/shared/shared.module';

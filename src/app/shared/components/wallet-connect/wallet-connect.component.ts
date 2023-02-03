@@ -52,7 +52,7 @@ export class WalletConnectComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    document.removeAllListeners('hide.bs.offcanvas');
+    // document.removeAllListeners('hide.bs.offcanvas');
     this.destroy$.next();
     this.destroy$.complete();
   }
